@@ -67,6 +67,21 @@ int main () {
         info.at(key).push_back(Sduration.count());
         std::cout << "sorted: " << fileName << std::endl;
     }
+    std::ofstream output("data/measurements/a.txt");
+    int entryCount = 0;
+    for (auto const &pair : info) {
+        output << pair.first << ": ";
+        for (auto const &data : pair.second) {
+            output << data << " ";
+            entryCount++;
+            if (entryCount == 3) {
+                output << " | ";
+                entryCount = 0;
+            }
+        }
+        output << "\n";
+    }
+    output << "\n";
     return 0;
 }
 
