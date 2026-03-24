@@ -3,6 +3,7 @@
 */
 
 #include <chrono>
+#include <cstddef>
 #include <map>
 #include <iostream>
 #include <string>
@@ -32,8 +33,20 @@ std::vector<std::string> getInputFileNames(std::string path) {
     return output;
 }
 
+size_t getMemoryUsageKB() {
+    std::ifstream file("/proc/self/status");
+    std::string line;
+    while (std::getline(file, line)) {
+        if (line.find("VmRSS") == 0) {
+            std::string mem = line.substr(6);
+            return std::stoul(mem);
+        }
+    }
+    return 0;
+}
+
 int main () {
-    std::map<int, std::vector<double>> info;
+    std::map<int, std::vector<double>> timeMeasurements;
     std::vector<std::string> fileNames = getInputFileNames("data/easy");
     std::vector<int> nums;
     for (auto const &fileName : fileNames) {
@@ -46,9 +59,11 @@ int main () {
         nums.clear();
         //#############################################################################
         nums = parseInputVect(fileName);
+        size_t prev = getMemoryUsageKB();
         start = std::chrono::high_resolution_clock::now();
         mergeSort(nums, 0, nums.size() - 1);
         end = std::chrono::high_resolution_clock::now();
+        size_t post = getMemoryUsageKB();
         std::chrono::duration<double, std::milli> MSduration = end - start;
         nums.clear();
         //#############################################################################
@@ -59,17 +74,18 @@ int main () {
         std::chrono::duration<double, std::milli> Sduration = end - start;
         nums.clear();
         //############################################################################
-        if (info.count(key) == 0) {
-            info.insert({key, {}});
+        if (timeMeasurements.count(key) == 0) {
+            timeMeasurements.insert({key, {}});
         }
-        info.at(key).push_back(QSduration.count());
-        info.at(key).push_back(MSduration.count());
-        info.at(key).push_back(Sduration.count());
-        std::cout << "sorted: " << fileName << std::endl;
+        timeMeasurements.at(key).push_back(QSduration.count());
+        timeMeasurements.at(key).push_back(MSduration.count());
+        timeMeasurements.at(key).push_back(Sduration.count());
+        std::cout << "sorted: " << fileName << " Memoria: ";
+        std::cout << post - prev << std::endl;
     }
     std::ofstream output("data/measurements/a.txt");
     int entryCount = 0;
-    for (auto const &pair : info) {
+    for (auto const &pair : timeMeasurements) {
         output << pair.first << ": ";
         for (auto const &data : pair.second) {
             output << data << " ";
@@ -82,6 +98,7 @@ int main () {
         output << "\n";
     }
     output << "\n";
+    output.close();
     return 0;
 }
 
