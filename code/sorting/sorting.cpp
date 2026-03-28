@@ -33,17 +33,17 @@ int main (int argc, char *argv[]) {
     }
     ALGORITHMS algo = static_cast<ALGORITHMS>(*argv[1]);
     std::string inputPath = argv[2];
-    std::vector<int> test = parseInputVect(inputPath);
+    std::vector<int> input = parseInputVect(inputPath);
     auto start = std::chrono::high_resolution_clock::now();
     switch (algo) {
         case MERGE:
-            mergeSort(test, 0, test.size() - 1);
+            mergeSort(input, 0, input.size() - 1);
             break;
         case QUICK:
-            quickSort(test, 0, test.size() - 1);
+            quickSort(input, 0, input.size() - 1);
             break;
         case SORT:
-            sortArray(test);
+            sortArray(input);
             break;
     }
     long peakMemUsage = getMemUsage();
@@ -55,7 +55,7 @@ int main (int argc, char *argv[]) {
     std::stringstream path;
     path << "data/measurements/" << algo << ".txt";
     std::cout << "Sorted: " << inputPath << std::endl;
-    writeDataFile(path.str(), test.size(), peakMemUsage, duration);
+    writeDataFile(path.str(), input.size(), peakMemUsage, duration);
     return 0;
 }
 
