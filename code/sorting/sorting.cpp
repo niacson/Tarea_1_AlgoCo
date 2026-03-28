@@ -3,13 +3,13 @@
 */
 
 #include <chrono>
-#include <cstddef>
 #include <map>
 #include <iostream>
 #include <string>
 #include <vector>
 #include <fstream>
 #include <filesystem>
+#include <sys/resource.h>
 //Algoritmos
 #include "algorithms/mergesort.h"
 #include "algorithms/quicksort.h"
@@ -33,16 +33,11 @@ std::vector<std::string> getInputFileNames(std::string path) {
     return output;
 }
 
-size_t getMemoryUsageKB() {
-    std::ifstream file("/proc/self/status");
-    std::string line;
-    while (std::getline(file, line)) {
-        if (line.find("VmRSS") == 0) {
-            std::string mem = line.substr(6);
-            return std::stoul(mem);
-        }
-    }
-    return 0;
+long getMemUsage() {
+    rusage usage_data;
+    getrusage(RUSAGE_SELF, &usage_data);
+    //Tranformacion de Kib a bytes
+    return long(usage_data.ru_maxrss);
 }
 
 int main () {
@@ -59,11 +54,10 @@ int main () {
         nums.clear();
         //#############################################################################
         nums = parseInputVect(fileName);
-        size_t prev = getMemoryUsageKB();
         start = std::chrono::high_resolution_clock::now();
         mergeSort(nums, 0, nums.size() - 1);
+        long peakMemUsage = getMemUsage();
         end = std::chrono::high_resolution_clock::now();
-        size_t post = getMemoryUsageKB();
         std::chrono::duration<double, std::milli> MSduration = end - start;
         nums.clear();
         //#############################################################################
@@ -80,8 +74,8 @@ int main () {
         timeMeasurements.at(key).push_back(QSduration.count());
         timeMeasurements.at(key).push_back(MSduration.count());
         timeMeasurements.at(key).push_back(Sduration.count());
-        std::cout << "sorted: " << fileName << " Memoria: ";
-        std::cout << post - prev << std::endl;
+        std::cout << "sorted: " << fileName;
+        std::cout << " Ram Usage: " << peakMemUsage << std::endl;
     }
     std::ofstream output("data/measurements/a.txt");
     int entryCount = 0;

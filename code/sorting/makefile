@@ -1,18 +1,21 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -g
+CXXFLAGS = -std=c++17 -Wall -Wextra -g -o2
 
-SRC = sorting.cpp $(wildcard algorithms/*.cpp)
-OBJ = $(SRC:.cpp=.o)
+SRCSORT = sorting1.cpp $(wildcard algorithms/*.cpp)
+OBJSORT = $(SRCSORT:.cpp=.o)
 
-TARGET = prog
+TARGET = sort
 
 all: $(TARGET)
 
-$(TARGET): $(OBJ)
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJ)
+$(TARGET): $(OBJSORT)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJSORT)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJ) $(TARGET)
+	rm -f $(OBJSORT) $(TARGET)
+
+hola:
+	echo "hola"
