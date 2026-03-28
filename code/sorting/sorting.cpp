@@ -1,19 +1,69 @@
-/*
-    Entiendo que en este archivo hay que agregar los algoritmos que tenemos, manejar la lectura de los archivos de texto y generar las salidas
-*/
-
 #include <chrono>
-#include <map>
-#include <iostream>
-#include <string>
-#include <vector>
 #include <fstream>
+#include <iostream>
 #include <filesystem>
 #include <sys/resource.h>
-//Algoritmos
+#include <vector>
+#include <string>
+#include <sstream>
+//Implementacion de los algoritmos de ordenamiento (y luego los de multiplicacion de matrices)
 #include "algorithms/mergesort.h"
 #include "algorithms/quicksort.h"
 #include "algorithms/sort.h"
+
+namespace fs = std::filesystem;
+
+//Funciones auxiliares
+std::vector<int> parseInputVect(std::string path);
+
+long getMemUsage();
+
+void writeDataFile(std::string path, int size, long peakMemUsage, long duration);
+
+enum ALGORITHMS : char {
+    MERGE = 'm',
+    QUICK = 'q',
+    SORT = 's'
+};
+
+int main (int argc, char *argv[]) {
+    if (argc < 3) {
+        std::cerr << "Modo de uso: ./sorting <algoritmo(q (quickSort), m (mergeSort), s (std::sort))> <input>" << std::endl;
+        return 1;
+    }
+    ALGORITHMS algo = static_cast<ALGORITHMS>(*argv[1]);
+    std::string inputPath = argv[2];
+    std::vector<int> test = parseInputVect(inputPath);
+    auto start = std::chrono::high_resolution_clock::now();
+    switch (algo) {
+        case MERGE:
+            mergeSort(test, 0, test.size() - 1);
+            break;
+        case QUICK:
+            quickSort(test, 0, test.size() - 1);
+            break;
+        case SORT:
+            sortArray(test);
+            break;
+    }
+    long peakMemUsage = getMemUsage();
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
+    // Formato escritura en archivo .txt:
+    // Nombre archivo: algoritmo.txt
+    // tamaño entrada, tiempo, memoria |
+    std::stringstream path;
+    path << "data/measurements/" << algo << ".txt";
+    std::cout << "Sorted: " << inputPath << std::endl;
+    writeDataFile(path.str(), test.size(), peakMemUsage, duration);
+    return 0;
+}
+
+long getMemUsage() {
+    rusage usage_data;
+    getrusage(RUSAGE_SELF, &usage_data);
+    return long(usage_data.ru_maxrss);
+}
 
 std::vector<int> parseInputVect(std::string path) {
     std::ifstream file(path);
@@ -25,74 +75,15 @@ std::vector<int> parseInputVect(std::string path) {
     return output;
 }
 
-std::vector<std::string> getInputFileNames(std::string path) {
-    std::vector<std::string> output;
-    for (const auto& entry : std::filesystem::directory_iterator(path)) {
-        output.push_back(entry.path().string());
+void writeDataFile(std::string path, int size, long peakMemUsage, long duration) {
+    if (fs::exists(path)) {
+        //Escribo sobre el archivo ya creado
+        std::ofstream file(path, std::ios::app);
+        file << size << "," << duration << "," << peakMemUsage << "|";
     }
-    return output;
-}
-
-long getMemUsage() {
-    rusage usage_data;
-    getrusage(RUSAGE_SELF, &usage_data);
-    //Tranformacion de Kib a bytes
-    return long(usage_data.ru_maxrss);
-}
-
-int main () {
-    std::map<int, std::vector<double>> timeMeasurements;
-    std::vector<std::string> fileNames = getInputFileNames("data/easy");
-    std::vector<int> nums;
-    for (auto const &fileName : fileNames) {
-        nums = parseInputVect(fileName);
-        int key = nums.size();
-        auto start = std::chrono::high_resolution_clock::now();
-        quickSort(nums, 0, nums.size() - 1);
-        auto end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double, std::milli> QSduration = end - start;
-        nums.clear();
-        //#############################################################################
-        nums = parseInputVect(fileName);
-        start = std::chrono::high_resolution_clock::now();
-        mergeSort(nums, 0, nums.size() - 1);
-        long peakMemUsage = getMemUsage();
-        end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double, std::milli> MSduration = end - start;
-        nums.clear();
-        //#############################################################################
-        nums = parseInputVect(fileName);
-        start = std::chrono::high_resolution_clock::now();
-        sortArray(nums);
-        end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double, std::milli> Sduration = end - start;
-        nums.clear();
-        //############################################################################
-        if (timeMeasurements.count(key) == 0) {
-            timeMeasurements.insert({key, {}});
-        }
-        timeMeasurements.at(key).push_back(QSduration.count());
-        timeMeasurements.at(key).push_back(MSduration.count());
-        timeMeasurements.at(key).push_back(Sduration.count());
-        std::cout << "sorted: " << fileName;
-        std::cout << " Ram Usage: " << peakMemUsage << std::endl;
+    else {
+        //Creo el archivo y escribo en el
+        std::ofstream file(path);
+        file << size << "," << duration << "," << peakMemUsage << "|";
     }
-    std::ofstream output("data/measurements/a.txt");
-    int entryCount = 0;
-    for (auto const &pair : timeMeasurements) {
-        output << pair.first << ": ";
-        for (auto const &data : pair.second) {
-            output << data << " ";
-            entryCount++;
-            if (entryCount == 3) {
-                output << " | ";
-                entryCount = 0;
-            }
-        }
-        output << "\n";
-    }
-    output << "\n";
-    output.close();
-    return 0;
 }
-
