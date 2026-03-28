@@ -1,4 +1,5 @@
 #include <chrono>
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <filesystem>
@@ -40,7 +41,7 @@ int main (int argc, char *argv[]) {
             mergeSort(input, 0, input.size() - 1);
             break;
         case QUICK:
-            quickSort(input, 0, input.size() - 1);
+            quickSort(input);
             break;
         case SORT:
             sortArray(input);
@@ -54,7 +55,6 @@ int main (int argc, char *argv[]) {
     // tamaño entrada, tiempo, memoria |
     std::stringstream path;
     path << "data/measurements/" << algo << ".txt";
-    std::cout << "Sorted: " << inputPath << std::endl;
     writeDataFile(path.str(), input.size(), peakMemUsage, duration);
     return 0;
 }
@@ -65,13 +65,15 @@ long getMemUsage() {
     return long(usage_data.ru_maxrss);
 }
 
+//Uso de scanf para mayor optimizacion al momento del parseo de vector
 std::vector<int> parseInputVect(std::string path) {
-    std::ifstream file(path);
+    FILE* file = fopen(path.c_str(), "r");
     std::vector<int> output;
     int num;
-    while (file >> num) {
+    while (fscanf(file, "%d", &num) == 1) {
         output.push_back(num);
     }
+    fclose(file);
     return output;
 }
 

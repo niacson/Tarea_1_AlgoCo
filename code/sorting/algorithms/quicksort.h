@@ -1,5 +1,10 @@
 #include <vector>
+#include <algorithm>
 
-int partition(std::vector<int> &vec, int low, int high);
+int medianOfThree(std::vector<int>& arr, int low, int high);
 
-void quickSort(std::vector<int> &vec, int low, int high);
+int partition(std::vector<int>& arr, int low, int high);
+
+void quicksort(std::vector<int>& arr, int low, int high);
+
+void quickSort(std::vector<int>& arr);

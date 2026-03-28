@@ -1,45 +1,68 @@
-/*Fuente: https://www.geeksforgeeks.org/cpp/cpp-program-for-quicksort/*/
+/*
+    Fuente: Implementacion obtenido con Claude Sonet 4.6.
+    promt:
+    Podrias entregarme una implementacion del algoritmo de ordenamiento de quicksort que ademas haga uso de la tecnica "Median of Three"
+    para la seleccion del pivote (en c++)
+*/
 #include "quicksort.h"
 
-int partition(std::vector<int> &vec, int low, int high) {
+// Median of Three: returns index of median value among arr[low], arr[mid], arr[high]
+int medianOfThree(std::vector<int>& arr, int low, int high) {
+    int mid = low + (high - low) / 2;
 
-    // Selecting last element as the pivot
-    int pivot = vec[high];
+    if (arr[low] > arr[mid])
+        std::swap(arr[low], arr[mid]);
+    if (arr[low] > arr[high])
+        std::swap(arr[low], arr[high]);
+    if (arr[mid] > arr[high])
+        std::swap(arr[mid], arr[high]);
 
-    // Index of elemment just before the last element
-    // It is used for swapping
-    int i = (low - 1);
-
-    for (int j = low; j <= high - 1; j++) {
-
-        // If current element is smaller than or
-        // equal to pivot
-        if (vec[j] <= pivot) {
-            i++;
-            std::swap(vec[i], vec[j]);
-        }
-    }
-
-    // Put pivot to its position
-    std::swap(vec[i + 1], vec[high]);
-
-    // Return the point of partition
-    return (i + 1);
+    // arr[low] <= arr[mid] <= arr[high]; median is at mid
+    // Place pivot at high-1 to keep it out of the partition zone
+    std::swap(arr[mid], arr[high - 1]);
+    return high - 1;
 }
 
-void quickSort(std::vector<int> &vec, int low, int high) {
+int partition(std::vector<int>& arr, int low, int high) {
+    int pivotIdx = medianOfThree(arr, low, high);
+    int pivot = arr[pivotIdx];
 
-    // Base case: This part will be executed till the starting
-    // index low is lesser than the ending index high
-    if (low < high) {
+    int i = low;
+    int j = high - 1;
 
-        // pi is Partitioning Index, arr[p] is now at
-        // right place
-        int pi = partition(vec, low, high);
-
-        // Separately sort elements before and after the
-        // Partition Index pi
-        quickSort(vec, low, pi - 1);
-        quickSort(vec, pi + 1, high);
+    while (true) {
+        while (arr[++i] < pivot);  // move right past elements < pivot
+        while (arr[--j] > pivot);  // move left past elements > pivot
+        if (i >= j) break;
+        std::swap(arr[i], arr[j]);
     }
+
+    // Restore pivot to its final position
+    std::swap(arr[i], arr[high - 1]);
+    return i;
+}
+
+void quicksort(std::vector<int>& arr, int low, int high) {
+    // Use insertion sort for small subarrays (optimization)
+    if (high - low < 10) {
+        for (int i = low + 1; i <= high; ++i) {
+            int key = arr[i];
+            int j = i - 1;
+            while (j >= low && arr[j] > key) {
+                arr[j + 1] = arr[j];
+                --j;
+            }
+            arr[j + 1] = key;
+        }
+        return;
+    }
+
+    int pivotIdx = partition(arr, low, high);
+    quicksort(arr, low, pivotIdx - 1);
+    quicksort(arr, pivotIdx + 1, high);
+}
+
+void quickSort(std::vector<int>& arr) {
+    if (arr.size() > 1)
+        quicksort(arr, 0, arr.size() - 1);
 }
