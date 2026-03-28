@@ -1,9 +1,9 @@
 /*
 Fuente Utilizada: https://www.geeksforgeeks.org/dsa/strassens-matrix-multiplication/#expected-approach-using-strassens-method-on-3-time-and-on-2-space
-Fuente que podria llegar a utilizar: https://github.com/dmonaldo/strassen-matrix-multiplication/blob/master/main.cpp
 */
 
 #include "strassen.h"
+#include <vector>
 
 // Return the next power of two greater than or equal to n
 int nextPowerOfTwo(int n) {
