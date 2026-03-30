@@ -11,7 +11,15 @@
 #include "algorithms/naive.h"
 #include "algorithms/strassen.h"
 
-std::optional<std::vector<std::vector<int>>> parseInputMatrix(std::string path);
+namespace fs = std::filesystem;
+
+std::optional<std::vector<std::vector<int>>> parseInputMatrix(std::string &path);
+
+void writeResMatrix(std::string path, std::vector<std::vector<int>> &res);
+
+void writeMeasurementRes(std::string path, int size, long duration, long peakMemUsage);
+
+std::string buildDestinationPath(std::string &originalPath);
 
 long getMemUsage();
 
@@ -40,22 +48,28 @@ int main (int argc, char *argv[]) {
     }
     std::vector<std::vector<int>> matrixA = *testA;
     std::vector<std::vector<int>> matrixB = *testB;
+    int size = matrixA.at(0).size();
+    std::vector<std::vector<int>> res;
     auto start = std::chrono::high_resolution_clock::now();
     switch (algo) {
         case STRASSEN:
-            strassen(matrixA, matrixB);
+            res = strassen(matrixA, matrixB);
             break;
         case NAIVE:
-            naiveMatMul(matrixA, matrixB);
+            res = naiveMatMul(matrixA, matrixB);
             break;
     }
     long peakMemUsage = getMemUsage();
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
+    writeResMatrix(buildDestinationPath(inputPathA), res);
+    std::stringstream measurePath;
+    measurePath << "data/measurements/" << algo << ".txt";
+    writeMeasurementRes(measurePath.str(), size, duration, peakMemUsage);
     return 0;
 }
 
-std::optional<std::vector<std::vector<int>>> parseInputMatrix(std::string path) {
+std::optional<std::vector<std::vector<int>>> parseInputMatrix(std::string &path) {
     std::ifstream file(path);
     if (!file.is_open()) {
         return std::nullopt;
@@ -79,3 +93,44 @@ long getMemUsage() {
     getrusage(RUSAGE_SELF, &usage_data);
     return long(usage_data.ru_maxrss);
 }
+
+std::string buildDestinationPath(std::string &originalPath) {
+    std::stringstream path;
+    std::string aux = originalPath.substr(18);
+    std::string name = aux.substr(0, aux.size() - 5);
+    path << "data/matrix_output/" << name << "out.txt";
+    return path.str();
+}
+
+void writeResMatrix(std::string path, std::vector<std::vector<int>> &res) {
+    std::ofstream file(path);
+    for (const auto &row : res) {
+        for (const int &num : row) {
+            file << num << " ";
+        }
+        file << "\n";
+    }
+    file.close();
+}
+
+void writeMeasurementRes(std::string path, int size, long duration, long peakMemUsage) {
+    if (fs::exists(path)) {
+        //Escribo sobre el archivo ya creado
+        std::ofstream file(path, std::ios::app);
+        file << size << "," << duration << "," << peakMemUsage << "|";
+    }
+    else {
+        //Creo el archivo y escribo en el
+        std::ofstream file(path);
+        file << size << "," << duration << "," << peakMemUsage << "|";
+    }
+}
+
+
+
+
+
+
+
+
+
