@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -17,7 +16,7 @@ def fixData(data, algo):
             aux.append([int(row[0]), int(row[1]), int(row[2]), algo])
 
 
-def buildPlots(path, xVar, yVar, df):
+def buildPlots(path, tittle, xVar, yVar, yLabel, df):
     plt.figure()
     ax = sns.lineplot(
         data=df,
@@ -30,6 +29,9 @@ def buildPlots(path, xVar, yVar, df):
         dashes=False,
         palette="flare",
     )
+    ax.set_title(tittle)
+    ax.set_xlabel("Tamaño")
+    ax.set_ylabel(yLabel)
     ax.set_xscale("log")
     ax.set_yscale("log")
     plt.savefig(path)
@@ -62,5 +64,19 @@ df.sort_values("size")
 sns.set_style("whitegrid")
 
 # Creacion de los graficos
-buildPlots(rootDir.format("plots", "sizeVStime"), "size", "time", df)
-buildPlots(rootDir.format("plots", "sizeVSmemory"), "size", "memory", df)
+buildPlots(
+    rootDir.format("plots", "sizeVStime"),
+    "Tamaño vs Tiempo",
+    "size",
+    "time",
+    "Tiempo [ns]",
+    df,
+)
+buildPlots(
+    rootDir.format("plots", "sizeVSmemory"),
+    "Tamaño vs Memoria",
+    "size",
+    "memory",
+    "Memoria [kb]",
+    df,
+)
