@@ -1,3 +1,7 @@
+// Autor: Ignacio Cofré Sandoval 202304140-8
+// Ramo: INF221
+// Semestre: 2026-1
+
 #include <chrono>
 #include <cstdio>
 #include <fstream>
