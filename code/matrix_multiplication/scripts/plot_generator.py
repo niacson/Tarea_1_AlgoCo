@@ -1,8 +1,9 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from pathlib import Path
 
-rootDir = "/home/ignacio/Downloads/tarea-1-algoco/template-tarea-1/code/matrix_multiplication/data/{}/{}"
+rootDir = Path(__file__).resolve().parent.parent
 
 
 aux = []
@@ -15,7 +16,7 @@ def fixData(data, algo):
 
 
 def buildPlots(path, tittle, xVar, yVar, yLabel, df):
-    plt.figure()
+    plt.figure(figsize=(12, 6))
     ax = sns.lineplot(
         data=df,
         x=xVar,
@@ -30,12 +31,23 @@ def buildPlots(path, tittle, xVar, yVar, yLabel, df):
     ax.set_xlabel("Tamaño")
     ax.set_ylabel(yLabel)
     ax.set_title(tittle)
+    ax.set_xscale("log", base=2)
+    ax.set_yscale("log")
     plt.savefig(path)
     plt.close()
 
 
-strassenDataPath = rootDir.format("measurements", "s.txt")
-naiveDataPath = rootDir.format("measurements", "n.txt")
+def buildBarPlot(path, xVar, xLabel, yVar, yLabel, df):
+    plt.figure()
+    ax = sns.barplot(data=df, x=xVar, y=yVar, palette="flare", hue=xVar)
+    ax.set_xlabel(xLabel)
+    ax.set_ylabel(yLabel)
+    plt.savefig(path)
+    plt.close()
+
+
+strassenDataPath = rootDir / "data" / "measurements" / "s.txt"
+naiveDataPath = rootDir / "data" / "measurements" / "n.txt"
 
 rawStrassenData = open(strassenDataPath, "r")
 rawNaiveData = open(naiveDataPath, "r")
@@ -53,11 +65,11 @@ df = pd.DataFrame(aux, columns=["size", "time", "memory", "algorithm"])
 df.sort_values("size")
 
 # Setteo para usar cuadricula
-sns.set_style("whitegrid")
+sns.set_style("darkgrid")
 
 # Creacion de los graficos
 buildPlots(
-    rootDir.format("plots", "sizeVStime"),
+    rootDir / "data" / "plots" / "sizeVStime.png",
     "Tamaño vs Tiempo",
     "size",
     "time",
@@ -65,10 +77,47 @@ buildPlots(
     df,
 )
 buildPlots(
-    rootDir.format("plots", "sizeVSmemory"),
+    rootDir / "data" / "plots" / "sizeVSmemory.png",
     "Tamaño vs Memoria",
     "size",
     "memory",
     "Memoria [kb]",
     df,
 )
+
+# Creacion de graficos de barra
+buildBarPlot(
+    rootDir / "data" / "plots" / "time.png",
+    "algorithm",
+    "Algoritmo",
+    "time",
+    "Tiempo [ns]",
+    df,
+)
+buildBarPlot(
+    rootDir / "data" / "plots" / "memory.png",
+    "algorithm",
+    "Algoritmo",
+    "memory",
+    "Memoria [kb]",
+    df,
+)
+
+# Creacion de tablas de datos
+dataTimeTable = (
+    df.groupby(["size", "algorithm"])["time"]
+    .agg(mean="mean", std="std", count="count")
+    .reset_index()
+)
+
+dataMemTable = (
+    df.groupby(["size", "algorithm"])["memory"]
+    .agg(mean="mean", std="std", count="count")
+    .reset_index()
+)
+
+print("Tiempo")
+print(dataTimeTable.to_latex())
+
+print("Memoria")
+print(dataMemTable.to_latex())

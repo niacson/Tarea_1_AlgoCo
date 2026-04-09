@@ -1,0 +1,9 @@
+# Fdb version 4
+["pdflatex"] 0 "author.tex" "author.pdf" "author" 0 -1
+  "author.aux" 0 -1 0 "pdflatex"
+  "author.tex" 0 -1 0 ""
+  (generated)
+  "author.aux"
+  "author.log"
+  "author.pdf"
+  (rewritten before read)
